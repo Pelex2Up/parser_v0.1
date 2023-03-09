@@ -24,7 +24,8 @@ def create_flats_table():
                 area CHARACTER VARYING(100),
                 year INTEGER,
                 rooms INTEGER,
-                phone_num CHARACTER VARYING(100)
+                phone_num CHARACTER VARYING(100),
+                images CHARACTER VARYING
                 )''')
 
 
@@ -33,7 +34,7 @@ def insert_flat(flat):
         with conn.cursor() as cur:
             cur.execute('''
                 INSERT INTO flats (link, reference, price, title, description, date, space, city, street,
-                area, year, rooms, phone_num) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
+                area, year, rooms, phone_num, photo_links) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
                 ON CONFLICT (link) DO UPDATE 
                 SET 
                 link = EXCLUDED.link, 
@@ -50,5 +51,31 @@ def insert_flat(flat):
                 phone_num = EXCLUDED.phone_num
                  ''',
                         (flat.link, flat.reference, flat.price, flat.title, flat.description, flat.date,
-                         flat.space, flat.city, flat.street, flat.area, flat.year, flat.rooms, flat.phone_num)
+                         flat.space, flat.city, flat.street, flat.area, flat.year, flat.rooms, flat.phone_num,
+                         ','.join(flat.images))
+                        )
+
+
+def get_all_not_posted_flats(parser_types):
+    with psycopg2.connect(dbname=DBNAME, user=USER, password=PASSWORD, host=HOST) as conn:
+        with conn.cursor() as cur:
+            cur.execute('''
+                    SELECT link, reference, price, title, description, date, photo_links, id FROM flats
+                    WHERE (is_tg_posted = false or is_tg_posted IS NULL) 
+                    and reference IN %(parser_types)s
+                 ''',
+                        {'parser_types': tuple(parser_types)}
+                        )
+            return cur.fetchall()
+
+
+def update_is_posted_state(ids):
+    with psycopg2.connect(dbname=DBNAME, user=USER, password=PASSWORD, host=HOST) as conn:
+        with conn.cursor() as cur:
+            cur.execute('''
+                    UPDATE flats SET
+                    is_tg_posted = true
+                    WHERE id = ANY(%s)
+                 ''',
+                        [ids, ]
                         )

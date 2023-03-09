@@ -1,6 +1,6 @@
 class Flat:
     def __init__(self, link, reference=None, price=None, title=None, description=None, date=None,
-                 space=None, city=None, street=None, area=None, year=None, rooms=None, phone_num=None):
+                 space=None, city=None, street=None, area=None, year=None, rooms=None, phone_num=None, images=None):
         self.link = link
         self.reference = reference
         self.price = price
@@ -14,3 +14,4 @@ class Flat:
         self.year = year
         self.rooms = rooms
         self.phone_num = phone_num
+        self.images = images
