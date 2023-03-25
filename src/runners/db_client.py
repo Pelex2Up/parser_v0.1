@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.extras
 
 DBNAME = 'parser_db'
 USER = 'postgres'
@@ -56,12 +57,12 @@ def insert_flat(flat):
                         )
 
 
-def get_all_not_posted_flats(parser_types):
+def get_all_not_posted_flats(parser_types) -> list:
     with psycopg2.connect(dbname=DBNAME, user=USER, password=PASSWORD, host=HOST) as conn:
         with conn.cursor() as cur:
             cur.execute('''
-                    SELECT link, reference, price, title, description, date, photo_links, id FROM flats
-                    WHERE (is_tg_posted = false or is_tg_posted IS NULL) 
+                    SELECT link, reference, price, title, description, date, photo_links, id, is_archive FROM flats
+                    WHERE (is_tg_posted = false and is_archive = false) 
                     and reference IN %(parser_types)s
                  ''',
                         {'parser_types': tuple(parser_types)}
@@ -79,3 +80,33 @@ def update_is_posted_state(ids):
                  ''',
                         [ids, ]
                         )
+
+
+def insert_batch(flats_list):
+    with psycopg2.connect(dbname=DBNAME, user=USER, password=PASSWORD, host=HOST) as conn:
+        with conn.cursor() as cur:
+            query = """INSERT INTO flats (link, reference, price, title, description, date, space, city, street,
+                        area, year, rooms, phone_num, photo_links) VALUES %s
+                        ON CONFLICT (link) DO UPDATE 
+                        SET 
+                        link = EXCLUDED.link, 
+                        price = EXCLUDED.price, 
+                        title = EXCLUDED.title, 
+                        description = EXCLUDED.description, 
+                        date = EXCLUDED.date,
+                        space = EXCLUDED.space,
+                        city = EXCLUDED.city,
+                        street = EXCLUDED.street,
+                        area = EXCLUDED.area,
+                        year = EXCLUDED.year,
+                        rooms = EXCLUDED.rooms,
+                        phone_num = EXCLUDED.phone_num"""
+            psycopg2.extras.execute_values(cur, query, flats_list, page_size=100)
+
+
+def get_all_flats():
+    with psycopg2.connect(dbname=DBNAME, user=USER, password=PASSWORD, host=HOST) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""SELECT * FROM flats""")
+            flats = cur.fetchall()
+            return flats

@@ -13,7 +13,7 @@ class DomovitaParser(DefaultParser):
     def get_parser_name(self):
         return 'DOMOVITA'
 
-    def get_links(self, page_from=0, page_to=10):
+    def get_links(self, page_from=0, page_to=10) -> list:
         reference = self.get_parser_name()
         ua = UserAgent()
         headers = {'accept': '*/*', 'user-agent': ua.firefox}
@@ -29,7 +29,7 @@ class DomovitaParser(DefaultParser):
                 page_from += 1
         return flat_links
 
-    def get_info_from_links(self, links, reference=None):
+    def get_info_from_links(self, links: list, reference=None) -> list[Flat]:
         reference = self.get_parser_name()
         ua = UserAgent()
         headers = {'accept': '*/*', 'user-agent': ua.firefox}

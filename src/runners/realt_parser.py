@@ -14,7 +14,7 @@ class RealtParser(DefaultParser):
     def get_parser_name(self):
         return 'REALT'
 
-    def get_links(self, page_from=0, page_to=1):
+    def get_links(self, page_from=1, page_to=2) -> list:
         reference = self.get_parser_name()
         ua = UserAgent()
         headers = {'accept': '*/*', 'user-agent': ua.firefox}
@@ -30,7 +30,7 @@ class RealtParser(DefaultParser):
             ready_links = list(filter(lambda el: 'object' in el, flat_links))
             return ready_links
 
-    def get_info_from_links(self, links, reference=None):
+    def get_info_from_links(self, links: list, reference=None) -> list[Flat]:
         reference = self.get_parser_name()
         ua = UserAgent()
         headers = {'accept': '*/*', 'user-agent': ua.firefox}
